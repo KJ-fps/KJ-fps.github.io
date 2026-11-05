@@ -71,6 +71,9 @@ pre{white-space:pre-wrap;background:#0f0b0c;border:1px solid var(--line);border-
 .hide{display:none}
 .rules li{margin-bottom:6px}
 .chan{color:var(--gold2);font-weight:600}
+.mmeta{display:block;font-size:12px;color:var(--mut);font-weight:400}
+.mname{flex:1;min-width:0}
+.mname b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -83,6 +86,7 @@ pre{white-space:pre-wrap;background:#0f0b0c;border:1px solid var(--line);border-
 
 <div class="tabs">
 <button data-t="suivi" class="on">📋 Suivi</button>
+<button data-t="membres">👥 Membres</button>
 <button data-t="guide">📖 Règles</button>
 </div>
 
@@ -138,6 +142,51 @@ pre{white-space:pre-wrap;background:#0f0b0c;border:1px solid var(--line);border-
 <button class="btn" id="copySr">📋 Copier le suivi de recrue</button>
 </div>
 <button class="btn ghost" id="newC">🔄 Tout effacer et recommencer</button>
+</div>
+</section>
+
+
+<!-- MEMBRES -->
+<section id="t-membres" class="hide">
+<div id="mlistBox">
+<div class="card">
+<h2>Membres</h2>
+<p class="sub">Touche un membre pour ouvrir sa fiche.</p>
+<div class="list" id="mlist"></div>
+<button class="btn gold" id="addM">➕ Ajouter un membre</button>
+</div>
+</div>
+<div id="mfiche" class="hide">
+<div class="card">
+<button class="btn ghost" id="backM" style="margin:0 0 12px">← Retour à la liste</button>
+<h2 id="mtitle">Fiche membre</h2>
+<p class="sub">Les infos se sauvegardent toutes seules sur cet appareil.</p>
+<label class="f">Nom Prénom RP</label><input type="text" data-m="nom" placeholder="Ex : Ivan « Kot » Petrov">
+<label class="f">Rang</label>
+<select data-m="rang">
+<option value="">—</option>
+<option>👑 Boss</option>
+<option>🗡️ Bras droit</option>
+<option>👑 Direction</option>
+<option>🐺 Boyevik</option>
+<option>🐺 Shestyorka</option>
+</select>
+<div class="row">
+<div><label class="f">Pseudo Discord</label><input type="text" data-m="discord"></div>
+<div><label class="f">ID Discord</label><input type="text" data-m="id" inputmode="numeric"></div>
+</div>
+<div class="row">
+<div><label class="f">Âge</label><input type="number" min="0" data-m="age"></div>
+<div><label class="f">Date d'entrée</label><input type="date" data-m="entree"></div>
+</div>
+<div class="row">
+<div><label class="f">Téléphone RP</label><input type="text" data-m="tel"></div>
+<div><label class="f">Disponibilités</label><input type="text" data-m="dispo" placeholder="Ex : soirs + week-end"></div>
+</div>
+<label class="f">📝 Notes</label><textarea data-m="notes"></textarea>
+<button class="btn gold" id="copyM">📋 Copier la fiche</button>
+<button class="btn ghost" id="delM">🗑️ Supprimer ce membre</button>
+</div>
 </div>
 </section>
 
@@ -267,10 +316,48 @@ function renderList(){
   return `<div class="cand ${id===db.cur?'cur':''}" data-id="${id}"><b>${esc(c.f.rp)||'Sans nom'}</b><span class="badge ${b[0]}">${b[1]}</span></div>`}).join('')||'<p class="sub">Aucun candidat.</p>';
  $$('.cand').forEach(e=>e.onclick=()=>{db.cur=e.dataset.id;save();all();tab('suivi');window.scrollTo(0,0)});
 }
-function tab(t){$$('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));['suivi','guide'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t))}
+function tab(t){$$('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));['suivi','membres','guide'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t))}
 $$('.tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
 function all(){renderSteps();renderFields();update()}
 all();
+
+/* ===== MEMBRES ===== */
+const RANKS=['👑 Boss','🗡️ Bras droit','👑 Direction','🐺 Boyevik','🐺 Shestyorka'];
+let mb=null;
+try{mb=JSON.parse(localStorage.getItem('vb_membres'))}catch(e){}
+function saveM(){try{localStorage.setItem('vb_membres',JSON.stringify(mb))}catch(e){}}
+if(!mb||!mb.m){mb={cur:null,m:{}};
+ [['Mikhaïl « Starik » Kamenka','👑 Boss'],['Nikolaï « Malysh » Kamenka','🗡️ Bras droit'],['Natasha « Lis » Kamenka','👑 Direction'],['Alexeï « Kot » Kamenka','👑 Direction']]
+ .forEach((x,i)=>{mb.m[uid()+i]={f:{nom:x[0],rang:x[1]},created:Date.now()+i}});saveM()}
+function rankIdx(r){const i=RANKS.indexOf(r);return i<0?99:i}
+function renderMList(){
+ const ids=Object.keys(mb.m).sort((a,b)=>rankIdx(mb.m[a].f.rang)-rankIdx(mb.m[b].f.rang)||mb.m[a].created-mb.m[b].created);
+ $('#mlist').innerHTML=ids.length?ids.map(id=>{const f=mb.m[id].f;const top=rankIdx(f.rang)<3;
+  return `<div class="cand" data-mid="${id}"><div class="mname"><b>${esc(f.nom)||'Sans nom'}</b><span class="mmeta">${esc(f.discord)||'Discord non renseigné'}</span></div>${f.rang?`<span class="badge ${top?'b-wait':'b-run'}">${esc(f.rang)}</span>`:''}<span class="chev">›</span></div>`}).join(''):'<p class="sub">Aucun membre pour l\'instant.</p>';
+ $$('[data-mid]').forEach(e=>e.onclick=()=>openM(e.dataset.mid));
+}
+function showMList(){mb.cur=null;saveM();$('#mfiche').classList.add('hide');$('#mlistBox').classList.remove('hide');renderMList()}
+function openM(id){
+ mb.cur=id;saveM();const m=mb.m[id];
+ $('#mlistBox').classList.add('hide');$('#mfiche').classList.remove('hide');
+ $('#mtitle').textContent=m.f.nom||'Nouveau membre';
+ $$('[data-m]').forEach(e=>{e.value=m.f[e.dataset.m]||'';e.oninput=e.onchange=()=>{m.f[e.dataset.m]=e.value;saveM();if(e.dataset.m==='nom')$('#mtitle').textContent=e.value||'Nouveau membre'}});
+ window.scrollTo(0,0);
+}
+$('#addM').onclick=()=>{const id=uid();mb.m[id]={f:{rang:'🐺 Shestyorka'},created:Date.now()};saveM();openM(id);setTimeout(()=>$('[data-m="nom"]').focus(),50)};
+$('#backM').onclick=showMList;
+$('#copyM').onclick=()=>{const f=(mb.m[mb.cur]||{f:{}}).f;copy(`🐺 **FICHE MEMBRE**
+
+👤 Nom RP : ${f.nom||'—'}
+🎖️ Rang : ${f.rang||'—'}
+💬 Discord : ${f.discord||'—'}${f.id?' ('+f.id+')':''}
+🎂 Âge : ${f.age||'—'}
+📆 Date d'entrée : ${fmtDate(f.entree)||'—'}
+📞 Téléphone RP : ${f.tel||'—'}
+🕒 Disponibilités : ${f.dispo||'—'}${f.notes?'\n📝 Notes : '+f.notes:''}`)};
+let armedM=0;$('#delM').onclick=()=>{const bt=$('#delM');if(!armedM){armedM=1;bt.textContent='⚠️ Appuie encore pour confirmer';setTimeout(()=>{armedM=0;bt.textContent='🗑️ Supprimer ce membre'},3000);return}
+ armedM=0;bt.textContent='🗑️ Supprimer ce membre';delete mb.m[mb.cur];showMList()};
+if(mb.cur&&mb.m[mb.cur])openM(mb.cur);else renderMList();
 </script>
 </body>
 </html>
