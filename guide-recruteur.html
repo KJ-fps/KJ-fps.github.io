@@ -323,9 +323,11 @@ const RANKS=['👑 Boss','🗡️ Bras droit','👑 Direction','🐺 Boyevik','�
 let mb=null;
 try{mb=JSON.parse(localStorage.getItem('vb_membres'))}catch(e){}
 function saveM(){try{localStorage.setItem('vb_membres',JSON.stringify(mb))}catch(e){}}
-if(!mb||!mb.m){mb={cur:null,m:{}};
- [['Mikhaïl « Starik » Kamenka','👑 Boss'],['Nikolaï « Malysh » Kamenka','🗡️ Bras droit'],['Natasha « Lis » Kamenka','👑 Direction'],['Alexeï « Kot » Kamenka','👑 Direction']]
- .forEach((x,i)=>{mb.m[uid()+i]={f:{nom:x[0],rang:x[1]},created:Date.now()+i}});saveM()}
+if(!mb||!mb.m)mb={cur:null,m:{},v:2};
+if(mb.v!==2){const DEF=['Mikhaïl « Starik » Kamenka','Nikolaï « Malysh » Kamenka','Natasha « Lis » Kamenka','Alexeï « Kot » Kamenka'];
+ Object.keys(mb.m).forEach(id=>{const f=mb.m[id].f||{};const filled=Object.keys(f).some(k=>!['nom','rang'].includes(k)&&String(f[k]||'').trim());
+  if(DEF.includes(f.nom)&&!filled)delete mb.m[id]});if(mb.cur&&!mb.m[mb.cur])mb.cur=null;mb.v=2}
+saveM();
 function rankIdx(r){const i=RANKS.indexOf(r);return i<0?99:i}
 function renderMList(){
  const ids=Object.keys(mb.m).sort((a,b)=>rankIdx(mb.m[a].f.rang)-rankIdx(mb.m[b].f.rang)||mb.m[a].created-mb.m[b].created);
