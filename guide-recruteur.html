@@ -179,10 +179,6 @@ pre{white-space:pre-wrap;background:#0f0b0c;border:1px solid var(--line);border-
 <div><label class="f">Âge</label><input type="number" min="0" data-m="age"></div>
 <div><label class="f">Date d'entrée</label><input type="date" data-m="entree"></div>
 </div>
-<div class="row">
-<div><label class="f">Téléphone RP</label><input type="text" data-m="tel"></div>
-<div><label class="f">Disponibilités</label><input type="text" data-m="dispo" placeholder="Ex : soirs + week-end"></div>
-</div>
 <label class="f">📝 Notes</label><textarea data-m="notes"></textarea>
 <button class="btn" id="sendM">📨 Envoyer la fiche sur Discord</button>
 <button class="btn gold" id="copyM">📋 Copier la fiche</button>
@@ -353,9 +349,7 @@ $('#copyM').onclick=()=>{const f=(mb.m[mb.cur]||{f:{}}).f;copy(`🐺 **FICHE MEM
 🎖️ Rang : ${f.rang||'—'}
 💬 Discord : ${f.discord||'—'}${f.id?' ('+f.id+')':''}
 🎂 Âge : ${f.age||'—'}
-📆 Date d'entrée : ${fmtDate(f.entree)||'—'}
-📞 Téléphone RP : ${f.tel||'—'}
-🕒 Disponibilités : ${f.dispo||'—'}${f.notes?'\n📝 Notes : '+f.notes:''}`)};
+📆 Date d'entrée : ${fmtDate(f.entree)||'—'}${f.notes?'\n📝 Notes : '+f.notes:''}`)};
 let armedM=0;$('#delM').onclick=()=>{const bt=$('#delM');if(!armedM){armedM=1;bt.textContent='⚠️ Appuie encore pour confirmer';setTimeout(()=>{armedM=0;bt.textContent='🗑️ Supprimer ce membre'},3000);return}
  armedM=0;bt.textContent='🗑️ Supprimer ce membre';delete mb.m[mb.cur];showMList()};
 if(mb.cur&&mb.m[mb.cur])openM(mb.cur);else renderMList();
@@ -370,7 +364,6 @@ $('#sendM').onclick=async()=>{
   {name:'👤 Nom RP',value:v(f.nom),inline:true},{name:'🎖️ Rang',value:v(f.rang),inline:true},
   {name:'💬 Pseudo Discord',value:v(f.discord),inline:true},{name:'🆔 ID Discord',value:v(f.id),inline:true},
   {name:'🎂 Âge',value:v(f.age),inline:true},{name:'📆 Date d\'entrée',value:v(fmtDate(f.entree)),inline:true},
-  {name:'📞 Téléphone RP',value:v(f.tel),inline:true},{name:'🕒 Disponibilités',value:v(f.dispo),inline:true},
   {name:'📝 Notes',value:v(f.notes),inline:false}],
   footer:{text:'Envoyé depuis le guide recruteur'},timestamp:new Date().toISOString()}]};
  const fd=new FormData();fd.append('payload_json',JSON.stringify(payload));
